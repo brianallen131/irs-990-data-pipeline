@@ -1,40 +1,41 @@
 import pandas as pd
-from pathlib import Path
+import matplotlib as mpl
 
-icd_data_dtypes = {
-    'filing_number': int,
-    'zip_name': str,
-    'ein': int,
-    'tax_yr': int,
-    'form':str,
-    'PersonNm': str,
-    'BusinessNameLine1Txt': str,
-    'AddressLine1Txt': str,
-    'CityNm': str,
-    'StateAbbreviationCd': str,
-    'ZIPCd': str,
-    'ServicesDesc': str,
-    'CompensationAmt': float
-}
+df_icd = pd.read_parquet('data/compiled_irs_data/independent_contractor_details_compiled.parquet')
+df_od = pd.read_parquet('data/compiled_irs_data/organization_details_compiled.parquet')
 
-icd_data_dir = Path("data/extracted_irs_data/independent_contractor_details")
-icd_files = list(icd_data_dir.glob('*.csv'))
-dataframes = []
-for file in icd_files:
-    try:
-        df = pd.read_csv(file,dtype=icd_data_dtypes)
-        if not df.empty:
-            dataframes.append(df)
-    except:
-        print(f"Couldn't read {file}")
-    # dataframes.append(pd.read_csv(file,dtype=daf_data_dtypes))
+tmp = df_icd[df_icd['contractor_name'].str.contains('aperio',case=False,na=False)]
+tmp = df_icd[df_icd['contractor_name'].str.contains('cambridge ass',case=False,na=False)]
+tmp.sort_values('compensation_amt',ascending=False,inplace=True)
 
-df_icd = pd.concat(dataframes)
+tmp2 = tmp.groupby(['tax_yr'])['compensation_amt'].sum()
 
-df_icd['EntityNm'] = df_icd['BusinessNameLine1Txt'].combine_first(df_icd['PersonNm'])
+df_icd_investments = df_icd[
+    (df_icd['service_description'].str.contains('investment',case=False,na=False)) &
+    (df_icd['tax_yr']==2023)
+]
+top_investment_contractors = df_icd_investments.groupby(['contractor_name'])['compensation_amt'].sum().sort_values(ascending=False)
 
-df_icd_dedup = df_icd[['filing_number', 'zip_name', 'ein', 'tax_yr', 'form', 'EntityNm', 'AddressLine1Txt', 'CityNm',
-       'StateAbbreviationCd', 'ZIPCd', 'ServicesDesc', 'CompensationAmt']]
 
-tmp =  df_icd_dedup[df_icd_dedup['EntityNm']=='APERIO']
-tmp =  df_icd_dedup[df_icd_dedup['ServicesDesc']=='INVESTMENT ADVICE'].groupby(['EntityNm'])['CompensationAmt'].sum().sort_values(ascending=False)
+total_investment = df_icd_investments.groupby(['tax_yr'])['compensation_amt'].sum()
+
+
+def format_large_numbers(x):
+    """Format numbers with M, B, T suffixes"""
+    if pd.isna(x):
+        return x
+
+    abs_x = abs(x)
+
+    if abs_x >= 1e12:
+        return f"${x / 1e12:.2f}T"
+    elif abs_x >= 1e9:
+        return f"${x / 1e9:.2f}B"
+    elif abs_x >= 1e6:
+        return f"${x / 1e6:.2f}M"
+    else:
+        return f"${x:.2f}"
+
+total_investment.apply(format_large_numbers)
+
+df_icd[df_icd['ein']==453203840 ]
