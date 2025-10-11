@@ -34,9 +34,9 @@ def main():
 
     # Configuration to edit
     raw_data_dir = Path("./data/raw_irs_data")
-    output_dir = Path("./data/extracted_irs_data/contributions_grants_assets")
+    output_dir = Path("./data/extracted_irs_data/contributions_grants_assets")   # Change: File Path for final data
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_prefix = 'contributions_grants_assets'
+    output_prefix = 'contributions_grants_assets'                                # Change: csv prefix for each file
 
     FILING_METADATA_FIELDS = {
         'ein': 'EIN',
@@ -44,30 +44,31 @@ def main():
         'form': 'ReturnTypeCd'
     }
 
-    DETAILS_SUBROOTS = {
+    DETAILS_SUBROOTS = {       # Change: Subroot where elem names to pull is unique
         '990': 'IRS990',
         '990PF': 'IRS990PF',
         '990EZ': 'IRS990EZ'
     }
 
-    DETAILS_FIELDS = {
-        'contribution_amt': {
-                '990': 'PYContributionsGrantsAmt',
-                '990PF': 'ContriRcvdRevAndExpnssAmt',
-                '990EZ': 'ContributionsGiftsGrantsEtcAmt'
-            },
-            # Total grants
-            'grant_amt': {
-                '990': 'PYGrantsAndSimilarPaidAmt',
-                '990PF': 'ContriPaidRevAndExpnssAmt',
-                '990EZ': 'GrantsAndSimilarAmountsPaidAmt'
-            },
-            # Total assets
-            'managed_assets_at_eoy': {
-                '990': 'NetAssetsOrFundBalancesEOYAmt',
-                '990PF': 'TotNetAstOrFundBalancesEOYAmt',
-                '990EZ': 'NetAssetsOrFundBalancesEOYAmt'
-            }
+    DETAILS_FIELDS = {         # Change: Column name and elem names to pull
+        # Total contributions
+        'contribution_amt': {                              # Column to store data under
+                '990': 'PYContributionsGrantsAmt',         # XML elem name to extract
+                '990PF': 'ContriRcvdRevAndExpnssAmt',      # XML elem name to extract
+                '990EZ': 'ContributionsGiftsGrantsEtcAmt'  # ...
+        },
+        # Total grants
+        'grant_amt': {
+            '990': 'PYGrantsAndSimilarPaidAmt',
+            '990PF': 'ContriPaidRevAndExpnssAmt',
+            '990EZ': 'GrantsAndSimilarAmountsPaidAmt'
+        },
+        # Total assets
+        'managed_assets_at_eoy': {
+            '990': 'NetAssetsOrFundBalancesEOYAmt',
+            '990PF': 'TotNetAstOrFundBalancesEOYAmt',
+            '990EZ': 'NetAssetsOrFundBalancesEOYAmt'
+        }
     }
 
     # Create and run extractor

@@ -1,6 +1,6 @@
 """
 Main compiler for IRS filing details.
-Creates the master list of distinct filings used by all other compilers.
+Creates the master list of distinct filings used by all other 03_compilers.
 """
 import pandas as pd
 from pathlib import Path

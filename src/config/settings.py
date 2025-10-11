@@ -55,7 +55,7 @@ class ProjectConfig:
             self.extraction = ExtractionConfig()
 
 
-# IRS Form 990 field mappings (shared across extractors)
+# IRS Form 990 field mappings (shared across 02_extractors)
 FILING_METADATA_FIELDS = {
     'ein': 'EIN',
     'tax_yr': 'TaxYr',

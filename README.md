@@ -44,7 +44,7 @@ pip install -r requirements.txt
 Download all available IRS 990 XML files:
 
 ```bash
-python -m src.extractors.download_irs_data
+python -m src.02_extractors.download_irs_data
 ```
 
 Options:
@@ -56,10 +56,10 @@ Options:
 Example:
 ```bash
 # Download with custom directory
-python -m src.extractors.download_irs_data --data-dir ./my_data
+python -m src.02_extractors.download_irs_data --data-dir ./my_data
 
 # Check what's already downloaded
-python -m src.extractors.download_irs_data --inventory
+python -m src.02_extractors.download_irs_data --inventory
 ```
 
 ### 2. Extract Data
@@ -68,32 +68,32 @@ Run any of the extraction scripts to process the XML files:
 
 #### Grant Details
 ```bash
-python -m src.extractors.grant_details_extractor
+python -m src.02_extractors.grant_details_extractor
 ```
 
 #### Independent Contractor Compensation
 ```bash
-python -m src.extractors.independent_contractor_details_extractor
+python -m src.02_extractors.independent_contractor_details_extractor
 ```
 
 #### Donor-Advised Funds
 ```bash
-python -m src.extractors.donor_advised_fund_extractor
+python -m src.02_extractors.donor_advised_fund_extractor
 ```
 
 #### Contributions, Grants & Assets
 ```bash
-python -m src.extractors.contributions_grants_assets_extractor
+python -m src.02_extractors.contributions_grants_assets_extractor
 ```
 
 #### Direct Charitable Activities
 ```bash
-python -m src.extractors.direct_charitable_activity_extractor
+python -m src.02_extractors.direct_charitable_activity_extractor
 ```
 
 #### Program-Related Investments
 ```bash
-python -m src.extractors.program_related_investments_extractor
+python -m src.02_extractors.program_related_investments_extractor
 ```
 
 ### Extraction Options
@@ -107,7 +107,7 @@ All extractors support these common options:
 Example:
 ```bash
 # Process with 4 parallel workers and force reprocessing
-python -m src.extractors.grant_details_extractor --max-workers 4 --force-process
+python -m src.02_extractors.grant_details_extractor --max-workers 4 --force-process
 ```
 
 ## Project Structure
@@ -170,7 +170,7 @@ All extracted datasets include these metadata fields:
 
 1. **Parallel Processing**: Use `--max-workers` to speed up extraction
    ```bash
-   python -m src.extractors.grant_details_extractor --max-workers 8
+   python -m src.02_extractors.grant_details_extractor --max-workers 8
    ```
 
 2. **Skip Existing Files**: By default, extractors skip already-processed files. Use `--force-process` only when needed.

@@ -3,8 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# Data
+# Data and models
 data/
+models/
+tests/scrap_analysis.py
 
 # C extensions
 *.so
