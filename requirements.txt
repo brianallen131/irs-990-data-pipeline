@@ -1,8 +1,25 @@
 # Python version
 python>=3.12,<3.13
 
-# Core data processing
-pandas>=2.1.0
+# Core Data Processing
+pandas==2.3.3
+numpy==2.3.3
+
+# Web Scraping & HTTP
+requests==2.32.5
+beautifulsoup4==4.13.0
+tqdm==4.67.1
+
+# File Processing
+zipfile-deflate64==0.2.0
+fastparquet==2024.11.0
+
+# Machine Learning
+torch==2.6.0
+scikit-learn==1.7.2
+
+# String Matching
+rapidfuzz==3.14.1
 
 # XML parsing (built-in, but ensuring compatibility)
 # lxml is optional but recommended for better XML performance
