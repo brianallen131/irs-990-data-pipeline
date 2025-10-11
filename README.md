@@ -1,236 +1,306 @@
 # IRS 990 Data Pipeline
 
-ETL pipeline for extracting and analyzing IRS Form 990 charitable giving data from XML filings.
+A comprehensive ETL pipeline for extracting, processing, and analyzing IRS Form 990 charitable giving data. This project enables researchers and analysts to work with nonprofit tax return data, including grant details, organizational information, and donor-advised funds.
 
-## Overview
+## 🎯 Features
 
-This pipeline downloads IRS Form 990 tax returns (990, 990-EZ, and 990-PF) and extracts structured data including:
-- Grant details and recipient information
-- Donor-advised fund statistics
-- Independent contractor compensation
-- Direct charitable activities
-- Program-related investments
-- Contributions, grants, and assets
+- **Automated Data Download**: Scrapes and downloads IRS Form 990 data files from official sources
+- **XML Processing**: Extracts structured data from IRS XML files with support for Forms 990, 990-EZ, and 990-PF
+- **Grant Matching**: Advanced fuzzy matching to link grant recipients with their EINs using the IRS Business Master File
+- **Machine Learning**: Two-tower neural network for donor-recipient recommendations
+- **Parallel Processing**: Multi-threaded extraction and processing for improved performance
+- **Comprehensive Data**: Extracts grants, contributions, assets, DAF details, contractor info, and more
 
-## Prerequisites
+## 📊 Data Pipeline
 
-- Python 3.12
-- 10+ GB free disk space (for raw IRS data)
-- Internet connection for downloading IRS files
+```
+1. Download → 2. Extract → 3. Compile → 4. Clean → 5. Analyze/ML
+```
 
-## Installation
+### Pipeline Stages
 
-1. **Clone the repository**
+1. **Download** (`01_downloaders/`)
+   - Downloads IRS Form 990 ZIP files from official sources
+   - Downloads IRS Business Master File (BMF) data for EIN matching
+
+2. **Extract** (`02_extractors/`)
+   - Parses XML files from ZIP archives
+   - Extracts structured data into CSV files per ZIP archive
+   - Supports multiple data types: filing details, grants, contributions, DAF info, etc.
+
+3. **Compile** (`03_compilers/`)
+   - Aggregates CSV files into unified datasets
+   - Deduplicates records
+   - Creates master organization file
+
+4. **Clean** (`04_cleaners/`)
+   - Fuzzy matching for grant recipient EINs
+   - Data standardization and quality improvements
+
+5. **Machine Learning** (`05_ml/`)
+   - Two-tower recommendation system
+   - Donor-to-recipient matching (D2R)
+   - Recipient-to-donor matching (R2D)
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.9+
+- 20+ GB free disk space (for data storage)
+
+### Installation
+
 ```bash
+# Clone the repository
 git clone https://github.com/brianallen131/irs-990-data-pipeline.git
 cd irs-990-data-pipeline
-```
 
-2. **Create a virtual environment**
-```bash
-python3.12 -m venv venv
+# Create virtual environment
+python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
 
-3. **Install dependencies**
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Quick Start
+### Basic Usage
 
-### 1. Download IRS Data
-
-Download all available IRS 990 XML files:
+#### 1. Download IRS Data
 
 ```bash
-python -m src.02_extractors.download_irs_data
+# Download Form 990 files
+python download_irs_data.py
+
+# Download Business Master File
+python download_bmf_data.py
 ```
 
-Options:
-- `--force` - Redownload existing files
-- `--sequential` - Use sequential downloads instead of parallel
-- `--data-dir PATH` - Custom download directory (default: `data/raw_irs_data`)
-- `--inventory` - Show inventory of existing files
+#### 2. Extract Data
 
-Example:
 ```bash
-# Download with custom directory
-python -m src.02_extractors.download_irs_data --data-dir ./my_data
+# Extract grant details
+python -m src.extractors.grant_details_extractor
 
-# Check what's already downloaded
-python -m src.02_extractors.download_irs_data --inventory
+# Extract organization details
+python -m src.extractors.filing_details_extractor
+
+# Extract with parallel processing (4 workers)
+python -m src.extractors.grant_details_extractor --max-workers 4
 ```
 
-### 2. Extract Data
+#### 3. Compile Data
 
-Run any of the extraction scripts to process the XML files:
-
-#### Grant Details
 ```bash
-python -m src.02_extractors.grant_details_extractor
+# Compile organization details (run this first)
+python filing_details_compiler.py
+
+# Compile grant details
+python grant_details_compiler.py
+
+# Compile other datasets
+python independent_contractor_details_compiler.py
+python program_related_investments_compiler.py
+python direct_charitable_activity_details_compiler.py
 ```
 
-#### Independent Contractor Compensation
+#### 4. Clean Data
+
 ```bash
-python -m src.02_extractors.independent_contractor_details_extractor
+# Match grant recipients to EINs using fuzzy matching
+python grant_details_recipients_inferred.py
 ```
 
-#### Donor-Advised Funds
+#### 5. Train ML Model
+
 ```bash
-python -m src.02_extractors.donor_advised_fund_extractor
+# Train two-tower recommendation model
+python grant_ttsn_recommender.py
+
+# Get recommendations for a donor
+python grant_ttsn_inference_D2R.py --donor_ein 123456789 --top_k 10
+
+# Find potential donors for a nonprofit
+python grant_ttsn_inference_R2D.py --receiver_ein 987654321 --top_k 20
 ```
 
-#### Contributions, Grants & Assets
-```bash
-python -m src.02_extractors.contributions_grants_assets_extractor
-```
-
-#### Direct Charitable Activities
-```bash
-python -m src.02_extractors.direct_charitable_activity_extractor
-```
-
-#### Program-Related Investments
-```bash
-python -m src.02_extractors.program_related_investments_extractor
-```
-
-### Extraction Options
-
-All extractors support these common options:
-
-- `--force-process` - Reprocess files even if output already exists
-- `--store-all-filing-data` - Store records even if all fields are null
-- `--max-workers N` - Number of parallel workers (default: 1)
-
-Example:
-```bash
-# Process with 4 parallel workers and force reprocessing
-python -m src.02_extractors.grant_details_extractor --max-workers 4 --force-process
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 irs-990-data-pipeline/
-├── data/
-│   ├── raw_irs_data/              # Downloaded ZIP files
-│   └── extracted_irs_data/        # Extracted CSV files by type
+├── 01_downloaders/
+│   ├── download_irs_data.py          # Download Form 990 files
+│   └── download_bmf_data.py          # Download BMF data
+├── 02_extractors/
+│   ├── base_extractor.py             # Base extraction class
+│   ├── filing_details_extractor.py   # Organization info
+│   ├── grant_details_extractor.py    # Grant data
+│   ├── contributions_grants_assets_extractor.py
+│   └── ...                           # Other extractors
+├── 03_compilers/
+│   ├── filing_details_compiler.py    # Main organization file
+│   ├── grant_details_compiler.py     # Compiled grants
+│   └── ...                           # Other compilers
+├── 04_cleaners/
+│   └── grant_details_recipients_inferred.py  # EIN matching
+├── 05_ml/
+│   ├── grant_ttsn_recommender.py     # Train model
+│   ├── grant_ttsn_inference_D2R.py   # Donor recommendations
+│   └── grant_ttsn_inference_R2D.py   # Find donors
 ├── src/
 │   ├── config/
-│   │   └── settings.py            # Configuration settings
-│   ├── extractors/
-│   │   ├── base_extractor.py      # Base extraction class
-│   │   ├── download_irs_data.py   # Data downloader
-│   │   ├── grant_details_extractor.py
-│   │   ├── independent_contractor_details_extractor.py
-│   │   ├── donor_advised_fund_extractor.py
-│   │   ├── contributions_grants_assets_extractor.py
-│   │   ├── direct_charitable_activity_extractor.py
-│   │   └── program_related_investments_extractor.py
+│   │   └── settings.py               # Configuration
 │   └── utils/
-│       ├── logging_config.py      # Logging configuration
-│       └── http_utils.py          # HTTP utilities
+│       ├── logging_config.py         # Logging setup
+│       └── http_utils.py             # HTTP utilities
+├── data/                             # Data directory (created automatically)
+│   ├── raw_irs_data/                 # Downloaded ZIP files
+│   ├── downloaded_irs_data/          # BMF CSV files
+│   ├── extracted_irs_data/           # Extracted CSVs
+│   ├── compiled_irs_data/            # Compiled Parquet files
+│   └── cleaned_irs_data/             # Final datasets
+├── models/                           # ML models and mappings
 ├── requirements.txt
 └── README.md
 ```
 
-## Output Data
+## 📚 Data Outputs
 
-Extracted data is saved as CSV files in `data/extracted_irs_data/` organized by extraction type:
+### Compiled Datasets (Parquet format)
 
-- `grant_details/` - Grant recipient information and amounts
-- `independent_contractor_details/` - Contractor compensation data
-- `donor_advised_fund_details/` - DAF contributions, grants, and balances
-- `contributions_grants_assets/` - High-level financial metrics
-- `direct_charitable_activity_details/` - Direct program activities (990-PF only)
-- `program_related_investments/` - Program-related investment details (990-PF only)
+Located in `data/compiled_irs_data/`:
 
-Each CSV file is named with the pattern: `{type}__{source_zip_file}.csv`
+- **organization_details_compiled.parquet**: Master list of all organizations with financial data
+- **grant_details_compiled.parquet**: All grants made by foundations
+- **independent_contractor_details_compiled.parquet**: Contractor compensation data
+- **program_related_investments_compiled.parquet**: PRI details
+- **direct_charitable_activity_details_compiled.parquet**: Program activities
 
-## Data Sources
+### Cleaned Datasets
 
-Data is downloaded from the IRS public dataset:
-- **Source**: [IRS Form 990 Data](https://www.irs.gov/charities-non-profits/form-990-series-downloads)
-- **Coverage**: E-filed returns from 2010-present
-- **Forms**: 990, 990-EZ, 990-PF
-- **Format**: XML files in ZIP archives
+Located in `data/cleaned_irs_data/`:
 
-## Common Fields
+- **grant_details_recipients_inferred.parquet**: Grants with matched recipient EINs
 
-All extracted datasets include these metadata fields:
-- `filing_number` - Unique IRS filing identifier
-- `zip_name` - Source ZIP file name
-- `ein` - Employer Identification Number
-- `tax_yr` - Tax year of filing
-- `form` - Form type (990, 990EZ, or 990PF)
+## 🔧 Configuration
 
-## Performance Tips
+### Extractor Options
 
-1. **Parallel Processing**: Use `--max-workers` to speed up extraction
-   ```bash
-   python -m src.02_extractors.grant_details_extractor --max-workers 8
-   ```
-
-2. **Skip Existing Files**: By default, extractors skip already-processed files. Use `--force-process` only when needed.
-
-3. **Disk Space**: Each ZIP file is 50-200 MB. Monitor disk usage when downloading all files.
-
-4. **Memory**: Processing large ZIP files may require 2-4 GB RAM per worker.
-
-## Troubleshooting
-
-### Download Issues
-- **Slow downloads**: Try `--sequential` flag or reduce `--max-workers`
-- **Connection timeouts**: Run downloader again; it will resume where it left off
-
-### Extraction Issues
-- **Missing data**: Not all forms contain all fields. Empty fields are expected.
-- **XML parsing errors**: Some files may have malformed XML. These are logged and skipped.
-- **Memory errors**: Reduce `--max-workers` or process fewer files at once
-
-### Check Logs
-All operations are logged. Check console output for detailed progress and error messages.
-
-## Development
-
-### Running Tests
 ```bash
-pytest
+# Force reprocessing of existing files
+python -m src.extractors.grant_details_extractor --force-process
+
+# Store all filing data (including null records)
+python -m src.extractors.grant_details_extractor --store-all-filing-data
+
+# Parallel processing
+python -m src.extractors.grant_details_extractor --max-workers 8
 ```
 
-### Code Style
-Follow PEP 8 guidelines. The codebase uses:
-- Type hints where applicable
-- Descriptive variable names
-- Docstrings for all public methods
+### ML Model Options
 
-## Contributing
+```bash
+# Train with custom hyperparameters
+python grant_ttsn_recommender.py
+# Edit EMBEDDING_DIM, BATCH_SIZE, NUM_EPOCHS in the script
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+# Inference with specific model
+python grant_ttsn_inference_D2R.py \
+  --donor_ein 123456789 \
+  --top_k 20 \
+  --model_path models/model_epoch_10.pt \
+  --embedding_dim 64
+```
 
-## License
+## 🤖 Machine Learning Model
 
-This project is open source and available under the MIT License.
+The project includes a **Two-Tower Neural Network** for matching donors with recipients:
 
-## Acknowledgments
+### Architecture
+- Separate embedding towers for donors and receivers
+- Dot product similarity for matching
+- Trained on 4M+ grant records
+- 160K+ unique donors, 850K+ unique receivers
 
-- IRS for providing public access to 990 data
-- Open Data for Nonprofit Research community for documentation and tools
+### Features
+- **Donor → Recipient**: Find potential grant recipients for a foundation
+- **Recipient → Donor**: Find potential donors for a nonprofit
+- **Batch Processing**: Get recommendations for multiple entities at once
+- **Model Checkpoints**: Saved every 5 epochs for experimentation
 
-## Contact
+### Example Usage
 
-Brian Allen - [GitHub](https://github.com/brianallen131)
+```python
+from grant_ttsn_inference_D2R import load_model, get_recommendations
 
-Project Link: [https://github.com/brianallen131/irs-990-data-pipeline](https://github.com/brianallen131/irs-990-data-pipeline)
+# Load trained model
+model, mappings = load_model()
 
-## Additional Resources
+# Get top 10 recommendations for a donor
+recommendations = get_recommendations(
+    donor_ein=123456789,
+    model=model,
+    mappings=mappings,
+    top_k=10
+)
 
-- [IRS Form 990 Documentation](https://www.irs.gov/forms-pubs/about-form-990)
-- [Form 990 XML Schema](https://www.irs.gov/e-file-providers/current-valid-xml-schemas-and-business-rules-for-exempt-organizations-modernized-e-file)
-- [Nonprofit Open Data Collective](https://nonprofit-open-data-collective.github.io/)
+# Display results
+for rank, (receiver_ein, score) in enumerate(recommendations, 1):
+    print(f"{rank}. Receiver EIN {receiver_ein}: {score:.4f}")
+```
+
+## 📊 Data Sources
+
+- **IRS Form 990 E-Files**: [IRS.gov Form 990 Downloads](https://www.irs.gov/charities-non-profits/form-990-series-downloads)
+- **IRS Business Master File**: [IRS.gov Exempt Organizations](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf)
+
+## 🛠️ Advanced Features
+
+### Fuzzy Matching
+
+The grant matching system uses:
+- **RapidFuzz** for high-performance string matching
+- **Multi-stage matching**: ZIP code → State-wide → Fallback
+- **Parallel processing**: Utilizes all CPU cores
+- **Name standardization**: Handles legal entity suffixes
+
+### Performance Optimizations
+
+- **Parallel ZIP processing**: Process multiple ZIP files simultaneously
+- **Chunked reading**: Memory-efficient processing of large files
+- **Incremental compilation**: Skip already-processed files
+- **Parquet format**: Fast I/O with columnar storage
+
+## 📈 Statistics
+
+Based on recent IRS data:
+- **163,000+** grant-making foundations
+- **847,000+** grant recipients
+- **4.1M+** individual grant records
+- **$XXX billion** in total grants analyzed
+
+## 🤝 Contributing
+
+Contributions are welcome! Areas for improvement:
+- Additional data extractors (Schedule A, Schedule D, etc.)
+- Enhanced ML models (incorporate text embeddings, financial features)
+- Data quality improvements
+- Documentation and examples
+
+## 📝 License
+
+This project is licensed under the MIT License - see LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- IRS for making 990 data publicly available
+- Nonprofit Open Data Collective for research and documentation
+- Open-source libraries: pandas, PyTorch, scikit-learn, RapidFuzz
+
+## 📧 Contact
+
+For questions or issues, please open an issue on GitHub.
+
+---
+
+**Note**: This project is for research and educational purposes. Always verify data quality and consult original IRS filings for official information.
